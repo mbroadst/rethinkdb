@@ -1,33 +1,33 @@
-// Copyright (C) 2011 Milo Yip
+// Tencent is pleased to support the open source community by making RapidJSON available.
 //
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
+// Copyright (C) 2015 THL A29 Limited, a Tencent company, and Milo Yip. All rights reserved.
 //
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
+// Licensed under the MIT License (the "License"); you may not use this file except
+// in compliance with the License. You may obtain a copy of the License at
 //
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
+// http://opensource.org/licenses/MIT
+//
+// Unless required by applicable law or agreed to in writing, software distributed
+// under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+// CONDITIONS OF ANY KIND, either express or implied. See the License for the
+// specific language governing permissions and limitations under the License.
 
 #ifndef RAPIDJSON_STRINGBUFFER_H_
 #define RAPIDJSON_STRINGBUFFER_H_
 
-#include "rapidjson.h"
+#include "stream.h"
+#include "internal/stack.h"
 
 #if RAPIDJSON_HAS_CXX11_RVALUE_REFS
 #include <utility> // std::move
 #endif
 
 #include "internal/stack.h"
+
+#if defined(__clang__)
+RAPIDJSON_DIAG_PUSH
+RAPIDJSON_DIAG_OFF(c++98-compat)
+#endif
 
 RAPIDJSON_NAMESPACE_BEGIN
 
@@ -37,7 +37,7 @@ RAPIDJSON_NAMESPACE_BEGIN
     \tparam Allocator type for allocating memory buffer.
     \note implements Stream concept
 */
-template <typename Encoding, typename Allocator = RAllocator>
+template <typename Encoding, typename Allocator = CrtAllocator>
 class GenericStringBuffer {
 public:
     typedef typename Encoding::Ch Ch;
@@ -54,6 +54,7 @@ public:
 #endif
 
     void Put(Ch c) { *stack_.template Push<Ch>() = c; }
+    void PutUnsafe(Ch c) { *stack_.template PushUnsafe<Ch>() = c; }
     void Flush() {}
 
     void Clear() { stack_.Clear(); }
@@ -63,7 +64,10 @@ public:
         stack_.ShrinkToFit();
         stack_.template Pop<Ch>(1);
     }
+
+    void Reserve(size_t count) { stack_.template Reserve<Ch>(count); }
     Ch* Push(size_t count) { return stack_.template Push<Ch>(count); }
+    Ch* PushUnsafe(size_t count) { return stack_.template PushUnsafe<Ch>(count); }
     void Pop(size_t count) { stack_.template Pop<Ch>(count); }
 
     const Ch* GetString() const {
@@ -93,6 +97,16 @@ private:
 //! String buffer with UTF8 encoding
 typedef GenericStringBuffer<UTF8<> > StringBuffer;
 
+template<typename Encoding, typename Allocator>
+inline void PutReserve(GenericStringBuffer<Encoding, Allocator>& stream, size_t count) {
+    stream.Reserve(count);
+}
+
+template<typename Encoding, typename Allocator>
+inline void PutUnsafe(GenericStringBuffer<Encoding, Allocator>& stream, typename Encoding::Ch c) {
+    stream.PutUnsafe(c);
+}
+
 //! Implement specialized version of PutN() with memset() for better performance.
 template<>
 inline void PutN(GenericStringBuffer<UTF8<> >& stream, char c, size_t n) {
@@ -100,5 +114,9 @@ inline void PutN(GenericStringBuffer<UTF8<> >& stream, char c, size_t n) {
 }
 
 RAPIDJSON_NAMESPACE_END
+
+#if defined(__clang__)
+RAPIDJSON_DIAG_POP
+#endif
 
 #endif // RAPIDJSON_STRINGBUFFER_H_
