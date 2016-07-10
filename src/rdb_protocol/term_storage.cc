@@ -394,7 +394,7 @@ MUST_USE archive_result_t deserialize_protobuf<Backtrace>(read_stream_t *s,
                                                           Backtrace *bt);
 
 rapidjson::Value convert_datum(const Datum &src,
-                               rapidjson::MAYBE_POOL_ALLOCATOR *allocator) {
+                               rapidjson::MemoryPoolAllocator<> *allocator) {
     guarantee(src.has_type());
     switch (src.type()) {
     case Datum::R_NULL:
@@ -435,7 +435,10 @@ rapidjson::Value convert_datum(const Datum &src,
         guarantee(src.has_r_str());
         rapidjson::Document doc(allocator);
         doc.Parse(src.r_str().c_str());
-        return rapidjson::Value(std::move(doc));
+
+        rapidjson::Value result;
+        result.CopyFrom(doc, doc.GetAllocator());
+        return std::move(result);
     }
     default:
         unreachable();
@@ -443,10 +446,10 @@ rapidjson::Value convert_datum(const Datum &src,
 }
 
 rapidjson::Value convert_term_tree(const Term &src,
-                                   rapidjson::MAYBE_POOL_ALLOCATOR *allocator);
+                                   rapidjson::MemoryPoolAllocator<> *allocator);
 
 rapidjson::Value convert_optargs(const Term &src,
-                                 rapidjson::MAYBE_POOL_ALLOCATOR *allocator) {
+                                 rapidjson::MemoryPoolAllocator<> *allocator) {
     rapidjson::Value dest(rapidjson::kObjectType);
     for (int i = 0; i < src.optargs_size(); ++i) {
         const Term_AssocPair &optarg = src.optargs(i);
@@ -459,7 +462,7 @@ rapidjson::Value convert_optargs(const Term &src,
 }
 
 rapidjson::Value convert_term_tree(const Term &src,
-                                   rapidjson::MAYBE_POOL_ALLOCATOR *allocator) {
+                                   rapidjson::MemoryPoolAllocator<> *allocator) {
     guarantee(src.has_type());
 
     rapidjson::Value dest(rapidjson::kArrayType);
@@ -502,7 +505,7 @@ MUST_USE archive_result_t deserialize_term_tree(
 
     rapidjson::Document doc;
     rapidjson::Value v = convert_term_tree(body, &doc.GetAllocator());
-    doc.Swap(v);
+    doc.CopyFrom(v, doc.GetAllocator());
     term_storage_out->init(new wire_term_storage_t(scoped_array_t<char>(),
                                                    std::move(doc)));
     return res;
