@@ -415,6 +415,8 @@ bool term_type_is_valid(Term::TermType type) {
     case Term::FLOOR:
     case Term::CEIL:
     case Term::ROUND:
+    case Term::SCHEMA:
+    case Term::VALIDATE:
         return true;
     default:
         return false;
@@ -604,6 +606,8 @@ bool term_is_write_or_meta(Term::TermType type) {
     case Term::FLOOR:
     case Term::CEIL:
     case Term::ROUND:
+    case Term::SCHEMA:
+    case Term::VALIDATE:
         return false;
     default: unreachable();
     }
@@ -791,6 +795,8 @@ bool term_forbids_writes(Term::TermType type) {
     case Term::FLOOR:
     case Term::CEIL:
     case Term::ROUND:
+    case Term::SCHEMA:
+    case Term::VALIDATE:
         return false;
     default: unreachable();
     }

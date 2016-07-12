@@ -28,6 +28,7 @@
 #include "rdb_protocol/pseudo_geometry.hpp"
 #include "rdb_protocol/pseudo_literal.hpp"
 #include "rdb_protocol/pseudo_time.hpp"
+#include "rdb_protocol/pseudo_schema.hpp"
 #include "rdb_protocol/serialize_datum.hpp"
 #include "rdb_protocol/shards.hpp"
 #include "parsing/utf8.hpp"
@@ -880,6 +881,10 @@ void datum_t::maybe_sanitize_ptype(const std::set<std::string> &allowed_pts) {
             // Clear the pseudotype data and convert it to binary data
             data = data_wrapper_t(construct_binary_t(),
                                   pseudo::decode_base64_ptype(*data.r_object));
+            return;
+        }
+        if (s == pseudo::schema_string) {
+            pseudo::sanitize_schema(this);
             return;
         }
         rfail(base_exc_t::LOGIC,

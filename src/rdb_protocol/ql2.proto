@@ -779,6 +779,10 @@ message Term {
         // Constants for specifying key ranges
         MINVAL = 180;
         MAXVAL = 181;
+
+        // Schema related terms
+        SCHEMA = 189;            // PSEUDOTYPE
+        VALIDATE = 190;          // -> BOOL
     }
     optional TermType type = 1;
 

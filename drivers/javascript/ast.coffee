@@ -391,6 +391,7 @@ class RDBVal extends TermBase
     seconds: (args...) -> new Seconds {}, @, args...
 
     uuid: (args...) -> new UUID {}, @, args...
+    validate: (args...) -> new Validate {}, @, args...
 
     getIntersecting: aropt (g, opts) -> new GetIntersecting opts, @, g
     getNearest: aropt (g, opts) -> new GetNearest opts, @, g
@@ -1204,6 +1205,14 @@ class UUID extends RDBOp
     tt: protoTermType.UUID
     st: 'uuid'
 
+class Schema extends RDBOp
+    tt: protoTermType.SCHEMA
+    st: 'schema'
+
+class Validate extends RDBOp
+    tt: protoTermType.VALIDATE
+    st: 'validate'
+
 
 # All top level exported functions
 
@@ -1366,6 +1375,9 @@ rethinkdb.uuid = (args...) -> new UUID {}, args...
 rethinkdb.range = (args...) -> new Range {}, args...
 
 rethinkdb.union = (args...) -> new Union {}, args...
+
+rethinkdb.schema = (args...) -> new Schema {}, args...
+rethinkdb.validate = (args...) -> new Validate {}, args...
 
 # Export all names defined on rethinkdb
 module.exports = rethinkdb

@@ -207,6 +207,9 @@ counted_t<const term_t> compile_on_current_stack(
     case Term::FLOOR:              return make_floor_term(env, t);
     case Term::CEIL:               return make_ceil_term(env, t);
     case Term::ROUND:              return make_round_term(env, t);
+
+    case Term::SCHEMA:             return make_schema_term(env, t);
+    case Term::VALIDATE:           return make_validate_term(env, t);
     default: unreachable();
     }
     unreachable();

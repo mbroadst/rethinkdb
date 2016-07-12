@@ -351,6 +351,12 @@ counted_t<term_t> make_replace_term(
 counted_t<term_t> make_foreach_term(
     compile_env_t *env, const raw_term_t &term);
 
+// schema.cc
+counted_t<term_t> make_schema_term(
+    compile_env_t *env, const raw_term_t &term);
+counted_t<term_t> make_validate_term(
+    compile_env_t *env, const raw_term_t &term);
+
 } // namespace ql
 
 #endif  // RDB_PROTOCOL_TERMS_TERMS_HPP_
