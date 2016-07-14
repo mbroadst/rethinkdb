@@ -89,17 +89,21 @@ void auto_reconnector_t::try_reconnect(const server_id_t &server,
     try {
         while (!interruptor.is_pulsed() && !join_failed.is_pulsed()) {
             coro_t::spawn_now_dangerously([&]() {
-                join_result_t result =
+                join_results_t results =
                     connectivity_cluster_run->join_blocking(
                         last_known_address, boost::none, server,
                         join_delay_secs,
                         auto_drainer_t::lock_t(&connectivity_cluster_run->drainer));
 
-                if (result == join_result_t::PERMANENT_ERROR &&
-                    addresses.find(server) != addresses.end()) {
-                    logNTC("Unrecoverable connection error to remote server: %s", server.print().c_str());
-                    join_failed.pulse_if_not_already_pulsed();
-                    addresses.erase(it);
+                for (auto r = results.begin(); r != results.end(); ++r) {
+                    if (r->second != join_result_t::PERMANENT_ERROR) break;
+                    last_known_address.erase_ip(r->first);
+
+                    if (last_known_address.ips().empty()) {
+                        logNTC("Unrecoverable connection error to remote server: %s",
+                               server.print().c_str());
+                        join_failed.pulse_if_not_already_pulsed();
+                    }
                 }
             });
 
